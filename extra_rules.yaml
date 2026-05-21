@@ -1,0 +1,268 @@
+# ============================================================
+# 额外规则配置文件 V1.0
+# ============================================================
+# 说明：包含高级过滤规则、复合命中逻辑、动态权重等
+# 版本：V1.0 (2026-04-04)
+# ============================================================
+
+# ========================================
+# 复合命中规则（Intersection Logic）
+# ========================================
+# 说明：对于某些分类，必须同时满足多个维度才能通过
+intersection_rules:
+  # AI+医疗：必须同时有AI词和医疗词
+  ai_medical:
+    enabled: true
+    description: "AI医疗分类必须同时命中AI和医疗关键词"
+
+    # 定义各个维度的关键词组
+    dimensions:
+      ai_keywords:
+        - "artificial intelligence"
+        - "machine learning"
+        - "deep learning"
+        - "neural network"
+        - "computer vision"
+        - "NLP"
+        - "LLM"
+        - "GPT"
+        - "人工智能"
+        - "AI"
+        - "算法"
+        - "大模型"
+        - "深度学习"
+
+      medical_keywords:
+        - "medical"
+        - "diagnosis"
+        - "clinical"
+        - "healthcare"
+        - "patient"
+        - "treatment"
+        - "therapy"
+        - "诊断"
+        - "治疗"
+        - "医疗影像"
+        - "辅助诊断"
+        - "CAD"
+        - "智慧医疗"
+        - "多模态分析"
+
+    # 每个维度的最低分数要求
+    min_scores:
+      ai_keywords: 10
+      medical_keywords: 10
+
+    # 是否强制要求所有维度都满足
+    require_all: true
+
+# ========================================
+# 动态权重规则
+# ========================================
+# 说明：顶级期刊可以降低门槛
+dynamic_threshold:
+  enabled: true
+
+  # 顶级来源列表（这些来源的资讯门槛降低）
+  super_sources:
+    # 顶级期刊（降低5分）
+    - name: "Nature"
+      threshold_adjustment: -5
+      priority: 100
+
+    - name: "Science"
+      threshold_adjustment: -5
+      priority: 100
+
+    - name: "JAMA"
+      threshold_adjustment: -5
+      priority: 100
+
+    - name: "NEJM"
+      threshold_adjustment: -5
+      priority: 100
+
+    - name: "Lancet"
+      threshold_adjustment: -5
+      priority: 100
+
+    - name: "Cell"
+      threshold_adjustment: -5
+      priority: 100
+
+    - name: "PNAS"
+      threshold_adjustment: -4
+      priority: 90
+
+    # 权威机构（降低3分）
+    - name: "NIH"
+      threshold_adjustment: -3
+      priority: 80
+
+    - name: "WHO"
+      threshold_adjustment: -3
+      priority: 80
+
+    - name: "PubMed"
+      threshold_adjustment: -3
+      priority: 80
+
+  # 最大降低分数（防止降太多）
+  max_adjustment: -8
+
+# ========================================
+# 预处理黑名单（Pre-AI Filter）
+# ========================================
+# 说明：在调用AI之前先过滤，节省Token和时间
+pre_filter:
+  enabled: true
+
+  # 高级黑名单（补充hard_exclude）
+  advanced_blackbox:
+    # 商业推广类
+    - "首发价"
+    - "样机"
+    - "跑分"
+    - "真机图"
+    - "内测版"
+    - "上手体验"
+    - "开箱视频"
+    - "首发评测"
+    - "工程机"
+    - "概念图"
+    - "渲染图"
+
+    # 数码产品细节
+    - "骁龙8"
+    - "天玑9"
+    - "A17"
+    - "麒麟9"
+    - "内存组合"
+    - "存储版本"
+    - "配色方案"
+    - "机身尺寸"
+    - "电池容量"
+
+    # 销售话术
+    - "限时抢购"
+    - "粉丝专享"
+    - "首发优惠"
+    - "早鸟价"
+    - "众筹"
+    - "预订"
+    - "预购"
+    - "抢订"
+
+    # 低质量内容
+    - "跑分对比"
+    - "性能测试"
+    - "续航测试"
+    - "拍照样张"
+    - "实拍图"
+    - "真机照"
+
+  # 快速跳过模式（如果命中这些词，直接跳过，不进入分类流程）
+  skip_immediately:
+    - "折叠屏手机"
+    - "手机上架"
+    - "开售"
+    - "起售价"
+    - "抢购价"
+
+# ========================================
+# 提示词增强注入
+# ========================================
+# 说明：在发送给AI之前，往content头部注入专家指令
+prompt_injection:
+  enabled: true
+
+  # 根据分类注入不同的指令
+  injections:
+    ai_medical:
+      instruction: |
+        【专家角色设定】
+        你现在是资深肿瘤科医生和AI医疗专家。
+
+        【分析重点】
+        1. 忽略所有关于商业融资、市场预测的冗余信息
+        2. 重点提取：
+           - 药物靶点（EGFR, ALK, ROS1, KRAS等）
+           - 生存期指标（OS, PFS, ORR等）
+           - 临床试验分期（I/II/III期）
+           - 生物标志物检测技术
+           - AI辅助诊断的具体技术路径
+
+        【输出要求】
+        - 如果是商业新闻，请明确标注"[商业信息]"
+        - 如果是临床研究，请重点关注循证医学证据等级
+
+    lung_cancer:
+      instruction: |
+        【专家角色设定】
+        你现在是胸部肿瘤科主任医师。
+
+        【分析重点】
+        1. 肺癌相关研究（NSCLC, SCLC）
+        2. 靶向治疗进展
+        3. 免疫治疗组合方案
+        4. 早期筛查技术
+        5. 精准医学检测
+
+        【忽略内容】
+        - 通用癌症科普
+        - 非肺癌的肿瘤研究
+        - 纯商业推广
+
+    nutrition_diet:
+      instruction: |
+        【专家角色设定】
+        你现在是临床营养科专家。
+
+        【分析重点】
+        1. 肿瘤营养支持（恶病质、肌肉减少症）
+        2. 肠内/肠外营养
+        3. 特定营养素干预
+        4. 营养与预后关系
+
+        【忽略内容】
+        - 一般减肥饮食
+        - 健身营养
+        - 普通保健品推广
+
+# ========================================
+# 语义去重配置（可选）
+# ========================================
+# 说明：使用AI向量化进行语义去重
+semantic_dedup:
+  enabled: false  # 默认关闭（需要额外安装依赖）
+
+  # 去重阈值（0-1，越低越严格）
+  similarity_threshold: 0.85
+
+  # 使用的模型
+  model: "sentence-transformers"  # 需要安装 sentence-transformers
+
+  # 去重策略
+  strategy: "keep_best"  # keep_best（保留最好的）, keep_first（保留第一条）
+
+  # 判断"最好"的标准
+  quality_criteria:
+    - source_trust: 0.3    # 来源信任度权重
+    - content_length: 0.2  # 内容长度权重
+    - analysis_depth: 0.5  # 分析深度权重
+
+# ========================================
+# 其他高级设置
+# ========================================
+advanced_settings:
+  # 是否在日志中显示详细的分数计算过程
+  show_score_details: true
+
+  # 是否显示复合命中逻辑的判断过程
+  show_intersection_logic: true
+
+  # 是否显示动态权重调整
+  show_dynamic_threshold: true
+
+  # 是否显示预过滤结果
+  show_pre_filter: true

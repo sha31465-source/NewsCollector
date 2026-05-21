@@ -1,0 +1,47 @@
+# ========================================
+# NewsCollector V36 - 配置文件示例
+# ========================================
+#
+# 说明：
+# 1. 首次运行程序会自动生成 prompts_config.yaml
+# 2. 本文件为示例模板，供参考配置结构
+# 3. 如需使用AI智能分析功能，请填写有效的 API Key
+# 4. 基础功能（采集、分类、生成报告）无需配置 API Key
+#
+# ========================================
+
+# API 配置（可选，用于AI智能分析和翻译）
+api:
+  api_url: "https://open.bigmodel.cn/api/paas/v4/"
+  api_key: ""  # 请在此处填写您的API密钥（留空则不使用AI功能）
+  model: "glm-4-flash"
+  timeout: 30
+
+# 分类配置（可在程序界面中配置）
+categories:
+  - name: "AI技术"
+    keywords: ["人工智能", "AI", "机器学习", "深度学习", "ChatGPT", "GPT"]
+  - name: "Python"
+    keywords: ["Python", "Django", "Flask", "NumPy", "Pandas", "Tkinter"]
+  - name: "前端"
+    keywords: ["JavaScript", "Vue", "React", "Angular", "TypeScript", "HTML", "CSS"]
+
+# 输出配置
+output:
+  format: "txt"  # txt 或 word
+  save_raw: true  # 是否保存原始内容
+  extract_code: true  # 是否提取代码片段
+  extract_images: false  # 是否下载图片
+
+# 采集配置
+collection:
+  max_items_per_source: 50  # 每个RSS源最多采集条数
+  days_to_keep: 30  # 保留多少天内的资讯
+  enable_deduplication: true  # 是否启用去重
+
+# 报告配置
+report:
+  include_summary: true  # 是否包含摘要
+  include_source_url: true  # 是否包含原始链接
+  group_by_category: true  # 是否按分类分组
+  date_format: "%Y-%m-%d %H:%M:%S"  # 日期格式

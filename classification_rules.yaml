@@ -1,0 +1,764 @@
+# ============================================================
+# 企业级资讯分类规则配置 V3.1 - 精简版
+# ============================================================
+# 说明：高门槛配置，大幅减少冗余内容
+# 版本：V3.1 (2026-04-01)
+# ============================================================
+
+# ========================================
+# 全局设置
+# ========================================
+global_settings:
+  # 全局最低门槛分（提升到20，V3.1温和精简）
+  # 说明：必须标题+内容同时命中，或命中多个关键词才能过线
+  min_score_threshold: 20
+
+  # 标题权重倍数（标题中的关键词更重要）
+  title_weight_multiplier: 2.0
+
+  # 内容权重倍数（内容中的关键词权重）
+  content_weight_multiplier: 1.0
+
+  # 最低匹配关键词数（至少匹配几个不同关键词）
+  min_keyword_matches: 2
+
+  # 来源信任度加分（权威来源直接加分）
+  source_trust_weights:
+    "Nature": 5.0           # Nature系列直接加5分
+    "Science": 5.0          # Science直接加5分
+    "JAMA": 5.0             # JAMA直接加5分
+    "NEJM": 5.0             # 新英格兰医学杂志
+    "Lancet": 5.0           # 柳叶刀
+    "Cell": 5.0             # Cell
+    "PNAS": 4.0             # 美国科学院院刊
+    "Nature Reviews": 5.0   # Nature综述系列
+    "Science Daily": 4.0    # 提升科学日报权重
+    "Medical Xpress": 3.0   # 提升Medical Xpress权重
+    "Frontiers": 3.0        # 提升Frontiers权重
+    "PLOS": 3.0             # PLOS系列
+    "PubMed": 4.0           # PubMed
+    "NIH": 4.0              # 美国国立卫生研究院
+    "WHO": 4.0              # 世界卫生组织
+    "MIT": 3.0              # MIT相关
+    "Harvard": 3.0          # 哈佛相关
+    "Stanford": 3.0         # 斯坦福相关
+    "Oxford": 3.0           # 牛津相关
+    "Cambridge": 3.0        # 剑桥相关
+    "EurekAlert!": 4.0      # 科学新闻发布平台
+    "Phys.org": 3.5         # 物理科学资讯
+    "MedicalXpress": 3.0    # 医学科学资讯
+    "TechXplore": 3.0       # 技术探索
+    "ArXiv": 4.0            # 预印本论文库
+    "bioRxiv": 4.0          # 生物学预印本
+    "Nature World News": 3.5 # 自然相关新闻
+    "IEEE Spectrum": 4.0    # IEEE官方媒体
+    "ACS Nano": 4.0         # 美国化学学会纳米
+    "Springer": 3.5         # 施普林格出版
+    "Wiley": 3.5            # 威利出版
+    "Taylor & Francis": 3.5  # 泰勒弗朗西斯
+    "ASM": 3.5              # 美国微生物学会
+    "ACS": 4.0              # 美国化学学会
+    "APS": 4.0              # 美国物理学会
+    "AHA": 3.5              # 美国心脏协会
+    "ESC": 3.5              # 欧洲心脏病学会
+    "Variety": 3.5          # Variety - 权威娱乐产业媒体
+
+  # 【新增】白名单配置（指定来源可以绕过某些黑名单规则）
+  whitelist:
+    # Variety.com - 权威娱乐产业新闻，允许包含 celebrity 等关键词
+    - source: "Variety"
+      # 允许的黑名单关键词（这些关键词将不会过滤此来源的内容）
+      allowed_keywords:
+        - "celebrity"
+        - "celeb"
+      # 说明：Variety 是好莱坞权威媒体，虽然包含 celebrity 但内容质量高
+      reason: "权威娱乐产业媒体"
+
+# ========================================
+# 硬屏蔽词列表（直接过滤，不进入分类流程）
+# ========================================
+# 修正：提高精度，避免误杀学术/产业资讯
+hard_exclude:
+  # 数码产品类（精确匹配，避免误杀）
+  - "折叠屏手机"
+  - "手机上架"
+  - "开启预约"
+  - "手机预售"
+  - "手机首销"
+  - "开箱视频"
+  - "数码测评"
+  - "骁龙8"
+  - "天玑9"
+  - "内存组合"
+  - "moto razr"
+  - "起售价"
+  - "抢购价"
+  - "限量发售"
+
+  # 明确的商业促销词组
+  - "限时抢购"
+  - "粉丝专享"
+  - "首发优惠"
+  - "众筹"
+  - "预订"
+  - "预购"
+
+# ========================================
+# 去重与过滤设置（增强版）
+# ========================================
+deduplication_settings:
+  # 相似度阈值（降低以提高召回率）
+  #   - 0.90: 极严格（只拦截几乎完全相同的标题）
+  #   - 0.85: 严格（拦截高度相似的标题）
+  #   - 0.80: 中等（拦截前缀/后缀不同的标题）【推荐】
+  #   - 0.75: 宽松（拦截内容相似但表述不同的标题）
+  similarity_threshold: 0.80
+
+  # 相似度计算方法
+  method: jaccard
+
+  # 【关键】是否启用标题去重（必须启用）
+  enable_title_dedup: true
+
+  # 是否启用内容去重（性能消耗大，谨慎开启）
+  enable_content_dedup: false
+
+  # 语义去重的最小内容长度
+  min_length_for_semantic_dedup: 50
+
+  # 【新增】查重时间窗口（天）
+  # 代码已修改为支持90天窗口，拦截周期性新闻和"炒冷饭"
+  deduplication_window_days: 90
+
+# ========================================
+# 负向过滤池（黑名单）- 大幅扩充
+# ========================================
+blacklists:
+  # ========== 促销类 ==========
+  - "promo code"
+  - "promo"
+  - "discount"
+  - "off"
+  - "off coupon"
+  - "coupon"
+  - "flash sale"
+  - "limited time offer"
+  - "buy now"
+  - "free shipping"
+  - "deal of the day"
+  - "special offer"
+  - "save $"
+  - "save up to"
+  - "% off"
+  - "best price"
+  - "cheap"
+  - "sale"
+  - "clearance"
+  - "bargain"
+  - "promotion"
+
+  # ========== 金融广告 ==========
+  - "stock market update"
+  - "hot stock tip"
+  - "investment opportunity"
+  - "get rich quick"
+  - "penny stock"
+  - "day trading"
+  - "forex trading"
+  - "trade now"
+  - "invest today"
+
+  # ========== 非医疗AI杂讯 ==========
+  - "TikTok marketing"
+  - "Instagram bot"
+  - "social media growth"
+  - "influencer marketing"
+  - "SEO tips"
+  - "content marketing"
+  - "affiliate marketing"
+  - "email marketing"
+  - "growth hacking"
+  - "viral marketing"
+
+  # ========== 生活类噪音（修正版）==========
+  # 注意：移除了 weight loss 和 diet，因为这些是医学研究主题
+  - "celebrity"          # 明星八卦（纯娱乐）
+  - "fitness goal"       # 健身目标
+  - "beauty tips"        # 美容贴士（非医学）
+  - "cosmetic procedure" # 医美项目（纯商业）
+  - "workout routine"    # 健身课程
+  - "muscle building"    # 增肌健身
+  - "bodybuilding"       # 健身
+  - "six pack"           # 六块腹肌
+  - "护肤"               # 保留护肤（纯美容）
+  - "增肌"               # 保留增肌（纯健身）
+  - "瑜伽"               # 保留瑜伽（纯健身）
+  - "pilates"            # 保留普拉提（纯健身）
+
+  # ========== 股市垃圾 ==========
+  - "stock price"
+  - "shareholders"
+  - "lawsuit"
+  - "sues"
+  - "sued"
+  - "ipo"
+  - "merger"
+  - "acquisition"
+  - "dividend"
+  - "quarterly earnings"
+  - "wall street"
+  - "earnings report"
+  - "market cap"
+
+  # ========== 游戏娱乐 ==========
+  # 【移除】改为分类收集，不再过滤
+  # - "video game"
+  # - "gaming"
+  # - "esports"
+  # - "streaming"
+  # - "twitch"
+  # - "youtube gaming"
+  # - "game release"
+  # - "playstation"
+  # - "xbox"
+  # - "nintendo"
+
+  # ========== 科技产品广告 ==========
+  - "best android phone"
+  - "iphone review"
+  - "laptop deal"
+  - "tech gadget"
+  - "smartwatch"
+  - "earbuds"
+  - "headphone review"
+  - "phone deal"
+  - "tablet review"
+
+  # ========== 低质量推广（新增） ==========
+  - "点击查看详情"
+  - "扫码关注"
+  - "转发抽奖"
+  - "立即购买"
+  - "限时优惠"
+  - "点击领取"
+  - "了解更多"
+  - "关注我们"
+  - "扫码"
+  - "关注公众号"
+  - "点击链接"
+  - "推广"
+  - "赞助"
+  - "advertisement"
+  - "sponsored"
+  # 【移除】"ad" 太宽泛，会误伤包含"ad"的正常单词（如announced、lead等）
+  # - "ad"
+  - "clickbait"
+  - "press release"
+
+  # ========== 重复内容特征 ==========
+  - "repost"
+  - "re-published"
+  - "syndication"
+  - "curated from"
+  - "originally appeared"
+
+  # ========== 采集错误 ==========
+  - "404"
+  - "page not found"
+  - "error"
+  - "access denied"
+  - "subscription required"
+  - "premium content"
+
+  # ========== 通用噪音（新增） ==========
+  - "daily news"
+  - "breaking news"
+  - "top stories"
+  - "trending"
+  - "viral"
+  - "must read"
+  - "editor's pick"
+  - "featured"
+  # - "update"  # 已删除：很多论文标题叫 "Update on..."，会被当成软件更新
+  - "weekly roundup"
+  - "digest"
+
+# ========================================
+# 分类规则（权重模型）
+# ========================================
+categories:
+  # ======================================
+  # 肺癌专区（最高优先级）
+  # ======================================
+  lung_cancer:
+    name: "肺癌前沿"
+    threshold: 20          # 提高门槛（需要多个关键词）
+    priority: 100
+    description: "肺癌诊断、治疗、研究的最新进展"
+
+    keywords:
+      # 核心词（20分）- 确保1个核心词即可接近过线
+      "lung cancer": 20
+      "NSCLC": 20
+      "SCLC": 20
+      "non-small cell lung cancer": 20
+      "肺癌": 20
+      "结节": 20
+      "早筛": 20
+
+      # 重要词（15分）
+      "EGFR": 15
+      "ALK": 15
+      "PD-L1": 15
+      "mesothelioma": 15
+      "thoracic": 15
+      "oncology": 15
+      "adenocarcinoma": 15
+
+      # 普通词（10-12分）
+      "bronchial": 12
+      "pulmonary": 12
+      "肺肿瘤": 12
+
+      # 治疗相关（5分）
+      "immunotherapy": 5
+      "targeted therapy": 5
+      "chemotherapy": 5
+      "靶向治疗": 15
+      "免疫治疗": 15
+
+    exclude:
+      - "breast cancer"
+      - "prostate cancer"
+      - "colon cancer"
+      - "电动"
+      - "续航"
+      - "优惠券"
+      - "大促销"
+
+  # ======================================
+  # 学术深度研究（最高优先级 - 硬核学术保护）
+  # ======================================
+  academic_research:
+    name: "学术深度研究"
+    threshold: 10          # 极低门槛，只要有学术词就让它过线
+    priority: 120          # 最高优先级，压过肺癌
+    description: "捕捉学术研究、流行病学调研、机制分析等硬核科研内容"
+
+    keywords:
+      # 统计学/研究方法（20-25分）
+      "regression": 20
+      "回归分析": 20
+      "cohort": 20
+      "队列研究": 20
+      "incidence": 20
+      "发病率": 20
+      "mortality": 20
+      "死亡率": 20
+      "Joinpoint": 25      # 统计学名词设为最高分
+      "meta-analysis": 20
+      "Meta分析": 20
+
+      # 核心学术词汇（15-20分）
+      "mechanism": 20
+      "机制": 20
+      "analyse": 15
+      "analysis": 15
+      "分析": 15
+      "trends": 15
+      "趋势": 15
+      "journal": 15
+      "期刊": 15
+
+      # 临床/流行病学（15-20分）
+      "clinical trial": 20
+      "临床试验": 20
+      "epidemiology": 18
+      "流行病学": 18
+      "therapeutic": 15
+      "治疗性": 15
+
+      # 时间区间特征（20分）- 针对长期流行病学研究
+      "1990-2021": 20
+      "1990-2019": 20
+      "2000-2020": 20
+      "1990-": 15
+      "2000-": 15
+
+      # 研究指标（12-15分）
+      "hazard ratio": 15
+      "confidence interval": 15
+      "odds ratio": 15
+      "风险比": 12
+      "置信区间": 12
+
+    exclude:
+      - "手机上架"
+      - "开箱视频"
+      - "抢购价"
+      - "限时折扣"
+      - "优惠券"
+
+  # ======================================
+  # AI+医疗
+  # ======================================
+  ai_medical:
+    name: "【AI技术 / 辅助诊断 / 政策与医保】"
+    threshold: 20          # 提高门槛（需要AI+医疗同时命中）
+    priority: 90
+    description: "人工智能在医疗领域的应用"
+
+    keywords:
+      # 技术维度
+      "算法": 5
+      "大模型": 5
+      "深度学习": 5
+
+      # 应用维度
+      "肺癌": 10
+      "结节": 8
+      "影像": 8
+      "筛查": 7
+
+      # 政策/民生维度
+      "医保": 15
+      "获批": 10
+      "准入": 8
+      "三类证": 12
+
+      # AI关键词（各12分）
+      "artificial intelligence": 12
+      "machine learning": 12
+      "deep learning": 12
+      "neural network": 12
+      "computer vision": 12
+      "NLP": 12
+      "LLM": 12
+      "GPT": 12
+      "人工智能": 12
+      "AI": 12
+
+      # 医疗关键词（各12分）
+      "medical": 12
+      "diagnosis": 12
+      "clinical": 12
+      "healthcare": 12
+      "patient": 12
+      "treatment": 10
+      "therapy": 10
+      "诊断": 12
+      "治疗": 10
+      "医疗影像": 15
+      "辅助诊断": 15
+      "CAD": 15
+      "智慧医疗": 12
+      "多模态分析": 12
+
+    exclude:
+      - "video game"
+      - "entertainment"
+      - "social media"
+      - "电动"
+      - "续航"
+      - "优惠券"
+      - "大促销"
+
+  # ======================================
+  # 营养与膳食研究
+  # ======================================
+  nutrition_diet:
+    name: "营养与膳食研究"
+    threshold: 20          # 提高门槛
+    priority: 88
+    description: "营养学研究，重点关注肿瘤营养"
+
+    keywords:
+      # 核心词（20分）
+      "nutrition": 20
+      "营养": 20
+      "lactoferrin": 20
+      "oncology nutrition": 20
+      "cancer cachexia": 20
+      "malnutrition": 20
+      "enteral nutrition": 20
+      "parenteral nutrition": 20
+      "恶病质": 20
+      "肠内营养": 20
+      "肠外营养": 20
+      "肿瘤营养": 20
+
+      # 重要词（15分）
+      "dietary": 15
+      "膳食": 15
+      "gut microbiota": 15
+      "gut microbiome": 15
+
+      # 常见营养素（10分）
+      "vitamin": 10
+      "nutrient": 10
+      "probiotics": 10
+      "营养学": 10
+
+    exclude:
+      - "weight loss tips"
+      - "recipe"
+      - "cooking"
+
+  # ======================================
+  # 基础医学与生命科学（科研机制捕捉）
+  # ======================================
+  medical_science:
+    name: "基础医学与生命科学"
+    threshold: 15          # 低门槛，保证科研能过线
+    priority: 95           # 最高优先级，抢占其他分类
+    description: "捕捉科研成果和机制分析，避免被误判为生活类资讯"
+
+    keywords:
+      # 核心词（20分）- 严重后果和机制
+      "brain damage": 20
+      "stroke": 20
+      "heart attack": 20
+      "mechanism": 20      # 机制分析
+      "sugar substitute": 20 # 糖替代品研究
+
+      # 重要词（15分）- 科研指标
+      "risk": 15           # 风险预警
+      "appetite": 15       # 食欲研究
+      "associated with": 15 # 相关性研究
+      "link to": 15        # 相关性
+      "therapy": 15        # 治疗方法
+      "clinical": 15       # 临床
+      "study": 15          # 研究
+      "research": 15       # 研究
+
+      # 普通词（10分）- 一般科研词汇
+      "scientist": 10      # 科学家
+      "finding": 10        # 发现
+      "habit": 10          # 习惯研究
+      "diet": 10           # 饮食（医学研究）
+      "weight": 10          # 体重（医学研究）
+
+    exclude:
+      - "fitness goal"     # 排除纯健身
+      - "workout routine"  # 排除健身课程
+
+  # ======================================
+  # 通用肿瘤/免疫
+  # ======================================
+  cancer_general:
+    name: "通用肿瘤/免疫"
+    threshold: 25          # 提高门槛
+    priority: 70
+    description: "非肺癌的肿瘤研究"
+
+    keywords:
+      # 核心词（15-20分）
+      "cancer": 15
+      "tumor": 15
+      "oncology": 20
+      "immunotherapy": 18
+      "chemotherapy": 15
+
+      # 免疫词（12分）
+      "immune": 12
+      "checkpoint inhibitor": 12
+      "PD-1": 12
+      "PD-L1": 12
+      "CAR-T": 12
+
+      # 中文
+      "癌症": 15
+      "肿瘤": 15
+      "免疫治疗": 18
+
+    exclude:
+      - "lung cancer"
+      - "NSCLC"
+      - "SCLC"
+      - "肺癌"
+
+  # ======================================
+  # 基础研究（提高优先级，降低门槛）
+  # ======================================
+  basic_research:
+    name: "基础研究"
+    threshold: 15          # 降低门槛（原25）→ 提高收录率
+    priority: 60          # 提高优先级（原30）→ 避免被其他分类抢占
+    description: "医学、生命科学、基础科学研究"
+
+    keywords:
+      # 核心词（20分）- 提升权重
+      "discovery": 20
+      "研究发现": 20
+      "科学发现": 20
+      "scientist": 20
+      "科学家": 20
+      "research": 18
+      "研究": 18
+      "study": 18
+      "finding": 18
+      "发现": 18
+
+      # 重要词（15分）
+      "clinical trial": 15
+      "临床试验": 15
+      "breakthrough": 15
+      "突破": 15
+      "innovation": 15
+      "创新": 15
+      "published": 15
+      "发表": 15
+      "journal": 15
+      "期刊": 15
+
+  # ======================================
+  # 游戏资讯（新增）
+  # ======================================
+  gaming:
+    name: "游戏资讯"
+    threshold: 15          # 中等门槛
+    priority: 50          # 中等优先级
+    description: "游戏行业动态、游戏发布、游戏评测、电竞资讯"
+
+    keywords:
+      # 核心词（20分）
+      "game": 20
+      "游戏": 20
+      "gaming": 20
+      "videogame": 18
+      "电竞": 18
+      "esports": 18
+
+      # 平台（15分）
+      "playstation": 15
+      "xbox": 15
+      "nintendo": 15
+      "steam": 15
+      "epic games": 15
+      "playstation": 15
+      "ps5": 15
+      "ps4": 15
+      "xbox series": 15
+      "switch": 15
+
+      # 游戏类型和术语（12分）
+      "rpg": 12
+      "fps": 12
+      "mmo": 12
+      "indie game": 12
+      "独立游戏": 12
+      "game release": 12
+      "游戏发布": 12
+      "game review": 12
+      "游戏评测": 12
+      "game update": 12
+      "游戏更新": 12
+      "dlc": 12
+      "expansion": 12
+
+      # 游戏公司（15分）
+      "nintendo": 15
+      "sony": 12
+      "microsoft": 12
+      "blizzard": 15
+      "activision": 15
+      "ea": 12
+      "ubisoft": 15
+      "bethesda": 15
+      "valve": 15
+      "暴雪": 15
+      "育碧": 15
+
+      # 电竞相关（12分）
+      "tournament": 12
+      "锦标赛": 12
+      "championship": 12
+      "competitive": 12
+      "pro player": 12
+      "职业选手": 12
+      "team": 10
+      "战队": 10
+
+  # ======================================
+  # 影视娱乐（新增）
+  # ======================================
+  movie_entertainment:
+    name: "影视娱乐"
+    threshold: 15          # 中等门槛
+    priority: 50          # 中等优先级
+    description: "电影、电视剧、综艺节目、娱乐新闻"
+
+    keywords:
+      # 核心词（20分）
+      "movie": 20
+      "电影": 20
+      "film": 18
+      "影片": 18
+      "tv": 15
+      "电视剧": 15
+      "television": 15
+      "show": 15
+      "节目": 15
+
+      # 影视奖项和评价（15分）
+      "oscar": 15
+      "academy awards": 15
+      "奥斯卡": 15
+      "emmy": 15
+      "金球奖": 15
+      "ratings": 12
+      "评分": 12
+      "review": 12
+      "影评": 12
+      "box office": 15
+      "票房": 15
+
+      # 影视制作（12分）
+      "director": 12
+      "导演": 12
+      "actor": 12
+      "演员": 12
+      "actress": 12
+      "女演员": 12
+      "casting": 12
+      "选角": 12
+      "production": 12
+      "制作": 12
+      "filming": 12
+      "拍摄": 12
+      "premiere": 12
+      "首映": 12
+      "trailer": 12
+      "预告片": 12
+      "release date": 12
+      "上映日期": 12
+
+      # 娱乐新闻（12分）
+      "hollywood": 12
+      "好莱坞": 12
+      "entertainment": 12
+      "娱乐": 12
+      "celebrity": 12
+      "明星": 12
+      "celeb": 10
+      "entertainment news": 15
+      "娱乐新闻": 15
+
+      # 流媒体平台（10分）
+      "netflix": 12
+      "disney+": 10
+      "hulu": 10
+      "amazon prime": 10
+      "hbo": 10
+      "streaming": 10
+      "流媒体": 10
+
+  # ======================================
+  # 默认分类
+  # ======================================
+  other:
+    name: "其他资讯"
+    threshold: 0
+    priority: 0
+    description: "无法分类的其他资讯"
+    keywords: {}

@@ -1,0 +1,53 @@
+# ========================================
+# NewsCollector V36 - Python 依赖列表
+# ========================================
+#
+# 安装方法：
+#   pip install -r requirements.txt
+#
+# 或在虚拟环境中安装：
+#   python -m venv venv
+#   venv\Scripts\activate  (Windows)
+#   pip install -r requirements.txt
+#
+
+# ========== GUI 框架 ==========
+customtkinter==5.2.1          # 现代化 GUI 框架，基于 Tkinter
+
+# ========== 配置文件解析 ==========
+PyYAML==6.0.1                 # YAML 配置文件解析
+
+# ========== Word 文档生成 ==========
+python-docx==1.1.0            # Word (.docx) 文档生成
+
+# ========== RSS 解析 ==========
+feedparser==6.0.10            # RSS/Atom 订阅源解析
+
+# ========== XML/HTML 处理 ==========
+lxml==5.1.0                   # XML 和 HTML 处理库
+
+# ========== HTTP 请求 ==========
+urllib3==2.0.0                # HTTP 客户端库
+
+# ========== 注意事项 ==========
+#
+# 1. 以下库为 Python 标准库，无需安装：
+#    - tkinter (GUI)
+#    - sqlite3 (数据库)
+#    - json, yaml (数据格式)
+#    - datetime, time (时间处理)
+#    - os, sys, pathlib (文件操作)
+#    - re (正则表达式)
+#    - threading, queue (多线程)
+#    - hashlib, ssl (加密和安全)
+#
+# 2. Python 版本要求：3.8 或更高
+#
+# 3. 如果遇到依赖冲突，可尝试使用虚拟环境：
+#    python -m venv venv
+#    venv\Scripts\activate  (Windows)
+#    source venv/bin/activate  (Linux/Mac)
+#
+# 4. 如果网络问题导致下载失败，可使用国内镜像：
+#    pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+#
