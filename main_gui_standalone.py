@@ -46,6 +46,19 @@ except ImportError:
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ============================================
+# 动态路径配置（兼容 PyInstaller 打包）
+# ============================================
+# 动态获取当前运行目录（兼容脚本运行和 exe 打包运行）
+if getattr(sys, 'frozen', False):
+    # 如果是 exe 运行，获取 exe 所在的目录
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    # 如果是 python 脚本运行，获取当前脚本所在目录
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+print(f"[路径] 运行目录: {BASE_DIR}")
+
+# ============================================
 # 源代码提取功能
 # ============================================
 
@@ -56,8 +69,8 @@ def extract_source_if_needed():
     """
     # 如果是PyInstaller打包的exe
     if getattr(sys, 'frozen', False):
-        # 当前脚本目录
-        script_dir = os.path.dirname(os.path.abspath(sys.executable))
+        # 当前脚本目录（使用全局 BASE_DIR）
+        script_dir = BASE_DIR
 
         # 源文件路径
         source_py = os.path.join(script_dir, 'main_gui_standalone.py')
@@ -92,7 +105,7 @@ def extract_source_if_needed():
 # ============================================
 
 # 基础输出路径
-BASE_OUTPUT_PATH = r"M:\claude\生成文件"
+BASE_OUTPUT_PATH = os.path.join(BASE_DIR, '生成文件')
 
 # 获取当前日期的输出目录
 def get_output_dirs():
